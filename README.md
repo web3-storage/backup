@@ -12,6 +12,7 @@ S3_REGION=<value>
 S3_BUCKET_NAME=<value>
 S3_ACCESS_KEY_ID=<value> # optional
 S3_SECRET_ACCESS_KEY=<value> # optional
+S3_ENDPOINT=<url> # optional, used to test against minio
 CONCURRENCY=<number> # optional
 BATCH_SIZE=<number> # optional
 ```
@@ -33,4 +34,12 @@ There's a `Dockerfile` that runs the tool in docker.
 ```sh
 docker build -t backup .
 docker run -d backup
+```
+
+### Test
+
+With docker running on your machine you can run the tests with
+
+```
+npm test
 ```
