@@ -40,6 +40,16 @@ docker run -d backup
 
 With docker running on your machine you can run the tests with
 
-```
+```sh
 npm test
 ```
+
+### peers.json
+
+This file contains the peering config for kubo with all of our cluster nodes in.
+
+You can updated it by running
+
+```sh
+npm run make-peers
+``
