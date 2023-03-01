@@ -16,7 +16,7 @@ async function main () {
     const lines = bod.split('\n').filter(l => l.startsWith('/ip4'))
     for (const line of lines) {
       const [Addr, ID] = line.split('/p2p/')
-      peers.add({ID, Addrs: [Addr]})
+      peers.add({ ID, Addrs: [Addr] })
     }
   }
   const out = JSON.stringify(Array.from(peers.values()), null, 2)

@@ -45,8 +45,8 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
   if (s3AccessKeyId && s3SecretAccessKey) {
     s3Conf.credentials = { accessKeyId: s3AccessKeyId, secretAccessKey: s3SecretAccessKey }
   }
-  if(s3Endpoint) {
-    console.log('using s3 enpoint', s3Endpoint)
+  if (s3Endpoint) {
+    log('using s3 enpoint', s3Endpoint)
     s3Conf.endpoint = s3Endpoint
     s3Conf.forcePathStyle = true
   }
@@ -66,7 +66,6 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
             log(`processing ${item.cid}`)
             try {
               const size = await retry(async () => {
-                // await swarmConnect(ipfs, item, log)
                 let size = 0
                 const source = (async function * () {
                   for await (const chunk of exportCar(ipfs, item, log)) {
@@ -175,21 +174,6 @@ async function * exportCar (ipfs, item, log) {
   } finally {
     clearInterval(reportInterval)
   }
-}
-
-/**
- * @param {IpfsClient} ipfs
- */
-async function swarmConnect (ipfs, item, log) {
-  if (!item.pinned_peers?.length) return
-  let connected = 0
-  for (const peer of item.pinned_peers) {
-    try {
-      await ipfs.swarmConnect(`/p2p/${peer}`)
-      connected++
-    } catch {}
-  }
-  log(`${connected} of ${item.pinned_peers.length} peers connected for ${item.cid}`)
 }
 
 /**

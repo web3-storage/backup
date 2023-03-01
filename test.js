@@ -14,7 +14,7 @@ test('backup a dag', async t => {
     .withNetworkAliases('minio')
     .withExposedPorts(9000)
     .start()
-  
+
   const s3Endpoint = 'http://minio:9000' // container to container
   const accessKeyId = 'minioadmin'
   const secretAccessKey = 'minioadmin'
