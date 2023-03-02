@@ -21,7 +21,7 @@ test('backup a dag', async t => {
   const bucketName = 'backup-test'
   const region = 'us-east-1'
 
-  const mb = await createBucket(bucketName, minio, accessKeyId, secretAccessKey)
+  const mb = await createBucket(bucketName, minio, accessKeyId, secretAccessKey, region)
   t.is(mb.$metadata.httpStatusCode, 200)
 
   const img = await GenericContainer.fromDockerfile('.').build()
