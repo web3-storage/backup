@@ -1,4 +1,4 @@
-name: Publish image to ECR
+name: ECR
 
 on:
   push:
@@ -10,13 +10,13 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Publish image
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: echo "SHORT_SHA=`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_ENV
     - run: echo "DATE=$(date -u +"%Y-%m-%d")" >> $GITHUB_ENV
-    - run: echo "IMAGE_TAG=$DATE-$SHORT_SHA"
+    - run: echo "IMAGE_TAG=$DATE-$SHORT_SHA" >> $GITHUB_ENV
     - name: Build, tag, and push image to Amazon ECR
       run: |
         docker build -t $IMAGE_TAG .
