@@ -2,7 +2,7 @@ import test from 'ava'
 import { setTimeout } from 'node:timers/promises'
 import { createHealthCheckServer } from '../health.js'
 
-test('healtcheck', async t => {
+test('heathcheck', async t => {
   const gracePeriodMs = 100
   const health = createHealthCheckServer({ sourceDataFile: 'test1', gracePeriodMs })
   const srvPromise = new Promise((resolve, reject) => {
