@@ -1,6 +1,12 @@
 import http from 'node:http'
 
-export function createHealthCheckServer ({ sourceDataFile, gracePeriodMs }) {
+export function createHealthCheckServer ({ sourceDataFile, gracePeriodMs } = {}) {
+  if (gracePeriodMs === undefined) {
+    throw new Error('createHealthCheckServer requires gracePeriodMs be set')
+  }
+  if (sourceDataFile === undefined) {
+    throw new Error('createHealthCheckServer requires sourceDataFile be set')
+  }
   // Track the timestamp of the last log line. Should be less than REPORT_INTERVAL
   let lastLogged = Date.now()
   const updateLastLogged = (timestamp = Date.now()) => { lastLogged = timestamp }

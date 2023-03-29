@@ -39,8 +39,8 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
     logger(msg)
     health.updateLastLogged()
   }
-  const gracePeriod = REPORT_INTERVAL * 2
-  const health = createHealthCheckServer({ sourceDataFile, gracePeriod })
+  const gracePeriodMs = REPORT_INTERVAL * 2
+  const health = createHealthCheckServer({ sourceDataFile, gracePeriodMs })
   health.srv.listen(healthcheckPort, '127.0.0.1', () => {
     log(`healthcheck server listening on ${healthcheckPort}`)
   })
