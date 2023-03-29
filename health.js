@@ -14,13 +14,17 @@ export function createHealthCheckServer ({ sourceDataFile, gracePeriodMs } = {})
   }
   // Track the timestamp of the last log line. Should be less than REPORT_INTERVAL
   let lastHeartbeat = Date.now()
-  const heartbeat = (timestamp = Date.now()) => { lastHeartbeat = timestamp }
+  let done = false
   const srv = http.createServer((_, res) => {
     const msSinceLastHeartbeat = Date.now() - lastHeartbeat
-    const status = msSinceLastHeartbeat > gracePeriodMs ? 500 : 200
+    const status = !done && msSinceLastHeartbeat > gracePeriodMs ? 500 : 200
     res.setHeader('Content-Type', 'application/json')
     res.writeHead(status)
-    res.end(JSON.stringify({ status, msSinceLastHeartbeat, sourceDataFile }))
+    res.end(JSON.stringify({ status, msSinceLastHeartbeat, sourceDataFile, done }))
   })
-  return { srv, heartbeat }
+  return {
+    srv,
+    done: () => { done = true },
+    heartbeat: (timestamp = Date.now()) => { lastHeartbeat = timestamp }
+  }
 }

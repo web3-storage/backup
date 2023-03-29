@@ -23,7 +23,7 @@ test('heathcheck', async t => {
   let res = await fetch('http://127.0.0.1:9999')
   t.is(res.status, 200)
   let obj = await res.json()
-  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs)
+  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs, JSON.stringify(obj))
 
   await setTimeout(gracePeriodMs)
 
@@ -37,5 +37,14 @@ test('heathcheck', async t => {
   res = await fetch('http://127.0.0.1:9999')
   t.is(res.status, 200)
   obj = await res.json()
-  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs)
+  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs, JSON.stringify(obj))
+  t.false(obj.done, JSON.stringify(obj))
+
+  health.done()
+  await setTimeout(gracePeriodMs)
+
+  res = await fetch('http://127.0.0.1:9999')
+  t.is(res.status, 200, 'ok even after gracePeriodMs after done called')
+  obj = await res.json()
+  t.true(obj.done, JSON.stringify(obj))
 })

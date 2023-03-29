@@ -117,6 +117,7 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
     }
   )
   log('backup complete 🎉')
+  health.done()
 }
 
 /**
