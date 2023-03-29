@@ -15,36 +15,27 @@ test('heathcheck throws if sourceDataFile not defined', async t => {
 test('heathcheck', async t => {
   const gracePeriodMs = 100
   const health = createHealthCheckServer({ sourceDataFile: 'test1', gracePeriodMs })
-  const srvPromise = new Promise((resolve, reject) => {
-    health.srv.listen(9999, '127.0.0.1', async () => {
-      console.log('srv listening')
-      try {
-        let res = await fetch('http://127.0.0.1:9999')
-        t.is(res.status, 200)
-        let obj = await res.json()
-        t.true(obj.msSinceLastLog <= gracePeriodMs)
-
-        await setTimeout(gracePeriodMs)
-
-        res = await fetch('http://127.0.0.1:9999')
-        t.is(res.status, 500)
-        obj = await res.json()
-        t.true(obj.msSinceLastLog > gracePeriodMs, JSON.stringify(obj))
-
-        health.updateLastLogged()
-
-        res = await fetch('http://127.0.0.1:9999')
-        t.is(res.status, 200)
-        obj = await res.json()
-        t.true(obj.msSinceLastLog <= gracePeriodMs)
-
-        resolve()
-      } catch (err) {
-        reject(err)
-      }
-    })
+  await new Promise((resolve, reject) => {
+    health.srv.listen(9999, '127.0.0.1', resolve)
     health.srv.on('error', reject)
   })
 
-  await srvPromise
+  let res = await fetch('http://127.0.0.1:9999')
+  t.is(res.status, 200)
+  let obj = await res.json()
+  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs)
+
+  await setTimeout(gracePeriodMs)
+
+  res = await fetch('http://127.0.0.1:9999')
+  t.is(res.status, 500)
+  obj = await res.json()
+  t.true(obj.msSinceLastHeartbeat > gracePeriodMs, JSON.stringify(obj))
+
+  health.heartbeat()
+
+  res = await fetch('http://127.0.0.1:9999')
+  t.is(res.status, 200)
+  obj = await res.json()
+  t.true(obj.msSinceLastHeartbeat <= gracePeriodMs)
 })

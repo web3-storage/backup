@@ -1,5 +1,10 @@
 import http from 'node:http'
 
+/**
+ * @param {object} config
+ * @param {string} config.sourceDataFile
+ * @param {number} config.gracePeriodMs
+ */
 export function createHealthCheckServer ({ sourceDataFile, gracePeriodMs } = {}) {
   if (gracePeriodMs === undefined) {
     throw new Error('createHealthCheckServer requires gracePeriodMs be set')
@@ -8,14 +13,14 @@ export function createHealthCheckServer ({ sourceDataFile, gracePeriodMs } = {})
     throw new Error('createHealthCheckServer requires sourceDataFile be set')
   }
   // Track the timestamp of the last log line. Should be less than REPORT_INTERVAL
-  let lastLogged = Date.now()
-  const updateLastLogged = (timestamp = Date.now()) => { lastLogged = timestamp }
+  let lastHeartbeat = Date.now()
+  const heartbeat = (timestamp = Date.now()) => { lastHeartbeat = timestamp }
   const srv = http.createServer((_, res) => {
-    const msSinceLastLog = Date.now() - lastLogged
-    const status = msSinceLastLog > gracePeriodMs ? 500 : 200
+    const msSinceLastHeartbeat = Date.now() - lastHeartbeat
+    const status = msSinceLastHeartbeat > gracePeriodMs ? 500 : 200
     res.setHeader('Content-Type', 'application/json')
     res.writeHead(status)
-    res.end(JSON.stringify({ status, msSinceLastLog, sourceDataFile }))
+    res.end(JSON.stringify({ status, msSinceLastHeartbeat, sourceDataFile }))
   })
-  return { srv, updateLastLogged }
+  return { srv, heartbeat }
 }

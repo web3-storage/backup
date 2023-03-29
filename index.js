@@ -34,13 +34,13 @@ const REPORT_INTERVAL = 1000 * 60 // log download progress every minute
  */
 export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKeyId, s3SecretAccessKey, s3Endpoint, concurrency, batchSize, healthcheckPort = 9999 }) {
   const sourceDataFile = dataURL.substring(dataURL.lastIndexOf('/') + 1)
+  const gracePeriodMs = REPORT_INTERVAL * 2
+  const health = createHealthCheckServer({ sourceDataFile, gracePeriodMs })
   const logger = debug(`backup:${sourceDataFile}`)
   const log = (msg) => {
     logger(msg)
-    health.updateLastLogged()
+    health.heartbeat()
   }
-  const gracePeriodMs = REPORT_INTERVAL * 2
-  const health = createHealthCheckServer({ sourceDataFile, gracePeriodMs })
   health.srv.listen(healthcheckPort, '127.0.0.1', () => {
     log(`healthcheck server listening on ${healthcheckPort}`)
   })
