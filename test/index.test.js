@@ -30,7 +30,7 @@ test('backup a dag', async t => {
   img.withNetwork(network)
   img.withEnvironment({
     BATCH_SIZE: 1,
-    CONCURRENCY: 50,
+    CONCURRENCY: 1,
     DEBUG: 'backup:*',
     DATA_URL: 'https://bafybeiha7xoedojqjz6ghxdtbf7yx2eklwo7db36772u3odrjusqck3ljm.ipfs.w3s.link/ipfs/bafybeiha7xoedojqjz6ghxdtbf7yx2eklwo7db36772u3odrjusqck3ljm/nft-0.json',
     S3_ENDPOINT: s3Endpoint,
