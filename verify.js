@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { Readable, Writable } from 'stream'
+import { Writable } from 'stream'
 import fs from 'fs'
 import retry from 'p-retry'
 import { transform } from 'streaming-iterables'
@@ -98,7 +98,7 @@ async function fetchData (dataURL, log) {
 
 /**
  * @param {URL|string} url
- * @param {import('multiformats').Link} cid 
+ * @param {import('multiformats').Link} cid
  */
 async function verifyCID (url, cid) {
   const res = await fetch(new URL(`/cid/${cid}`, url))
