@@ -2,8 +2,22 @@
 
 import dotenv from 'dotenv'
 import { startBackup } from './index.js'
+import { startVerify } from './verify.js'
 
 dotenv.config()
+
+if (process.argv[2] === 'verify') {
+  try {
+    await startVerify({
+      dataURL: mustGetEnv('DATA_URL'),
+      verifierURL: process.env.VERIFIER_URL
+    })
+    process.exit()
+  } catch (err) {
+    console.error('exiting! startVerify threw error', err)
+    process.exit(1)
+  }
+}
 
 try {
   await startBackup({
