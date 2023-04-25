@@ -8,6 +8,8 @@ import { pipe } from 'it-pipe'
 import * as Link from 'multiformats/link'
 
 const VERIFIER_URL = 'https://linkdex.dag.haus'
+/** Max time to verify a DAG (in ms) */
+const VERIFIER_TIMEOUT = 1000 * 60 * 15
 const CONCURRENCY = 1
 
 /** @typedef {{ cid: string, pinned_peers: string[] }} InputData */
@@ -101,7 +103,13 @@ async function fetchData (dataURL, log) {
  * @param {import('multiformats').Link} cid
  */
 async function verifyCID (url, cid) {
-  const res = await fetch(new URL(`/cid/${cid}`, url))
-  if (!res.ok) throw new Error(`verifier API responded with unexpected status: ${res.status}`)
-  return /** @type {import('linkdex').Report} */(await res.json())
+  const controller = new AbortController()
+  const timeoutID = setTimeout(() => controller.abort(), VERIFIER_TIMEOUT)
+  try {
+    const res = await fetch(new URL(`/cid/${cid}`, url), { signal: controller.signal })
+    if (!res.ok) throw new Error(`verifier API responded with unexpected status: ${res.status}`)
+    return /** @type {import('linkdex').Report} */(await res.json())
+  } finally {
+    clearTimeout(timeoutID)
+  }
 }
