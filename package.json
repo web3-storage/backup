@@ -8,6 +8,7 @@
   "scripts": {
     "start": "npm-run-all ipfs:config --parallel ipfs:daemon start:backup",
     "start:backup": "node bin.js",
+    "start:verify": "node bin.js verify",
     "ipfs:daemon": "ipfs daemon &",
     "ipfs:config": "ipfs init --profile=server --empty-repo && ./ipfs-config.sh",
     "lint": "standard",
@@ -26,6 +27,7 @@
     "it-batch": "^2.0.0",
     "it-ndjson": "^0.1.1",
     "it-pipe": "^2.0.5",
+    "linkdex": "^2.0.1",
     "multiformats": "^11.0.1",
     "npm-run-all2": "^6.0.5",
     "p-retry": "^5.1.0",
