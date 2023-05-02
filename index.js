@@ -159,7 +159,7 @@ function filterAlreadyStored (s3, bucket, log) {
   return async function * (source) {
     yield * pipe(
       source,
-      transform(CONCURRENCY, async item => {
+      transform(100, async item => {
         const cmd = new HeadObjectCommand({ Bucket: bucket, Key: bucketKey(item.cid) })
         try {
           await s3.send(cmd)
