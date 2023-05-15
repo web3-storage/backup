@@ -210,8 +210,7 @@ async function getSize (ipfs, cid) {
  * @param {import('multiformats').Link} cid
  * @param {(...args: any[]) => void} [log]
  */
-export async function verifyCID (url, cid, log = (() => {})) {
-  const start = Date.now()
+export async function verifyCID (url, cid, log = () => {}) {
   let i = 0
   const verifyInterval = setInterval(() => log(`still verifying ${cid} after ${++i} minute(s)`), 60_000)
   try {
