@@ -14,6 +14,7 @@ import * as raw from 'multiformats/codecs/raw'
 import * as dagPB from '@ipld/dag-pb'
 import { IpfsClient } from './ipfs-client.js'
 import { createHealthCheckServer } from './health.js'
+import { fetchCID, exportCar, s3Upload } from './index.js'
 
 const fmt = formatNumber()
 
@@ -119,42 +120,6 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
   log('backup complete 🎉')
   health.done()
 }
-
-/**
- * @param {string|URL} url
- * @returns {AsyncIterable<InputData>}
- */
-async function * fetchCID (url, log) {
-  const data = await fetchData(url, log)
-  // @ts-ignore
-  yield * parse(data)
-}
-
-/**
- * @param {string|URL} dataURL
- * @param {(...args: any[]) => void} log
- */
-export async function fetchData (dataURL, log) {
-  log('fetching dataURL %s', dataURL)
-  const fileName = 'data.json'
-  for (let i = 0; i < 10; i++) {
-    try {
-      const res = await fetch(dataURL)
-      if (!res.ok || !res.body) {
-        const errMessage = `${res.status} ${res.statusText} ${dataURL}`
-        throw new Error(errMessage)
-      }
-      await res.body.pipeTo(Writable.toWeb(createWriteStream(fileName)))
-      return createReadStream(fileName)
-    } catch (err) {
-      log('Error fetchData: %o', err)
-    }
-  }
-  log('fetchData: giving up. could no get %s', dataURL)
-}
-
-/** @param {string} cid */
-const bucketKey = cid => `complete/${CID.parse(cid).toV1()}.car`
 
 /**
  * @param {string|URL} url Verifier API URL
@@ -263,46 +228,4 @@ export async function verifyCID (url, cid, log = (() => {})) {
   } finally {
     clearInterval(verifyInterval)
   }
-}
-
-/**
- * @param {IpfsClient} ipfs
- */
-async function * exportCar (ipfs, item, log) {
-  let reportInterval
-  try {
-    let bytesReceived = 0
-
-    reportInterval = setInterval(() => {
-      log(`received ${fmt(bytesReceived)} bytes of ${item.cid}`)
-    }, REPORT_INTERVAL)
-
-    for await (const chunk of ipfs.dagExport(item.cid, { timeout: BLOCK_TIMEOUT })) {
-      bytesReceived += chunk.byteLength
-      yield chunk
-    }
-  } finally {
-    clearInterval(reportInterval)
-  }
-}
-
-/**
- * @param {import('@aws-sdk/client-s3').S3Client} s3
- * @param {string} bucketName
- * @param {InputData} item
- * @param {AsyncIterable<Uint8Array>} content
- */
-async function s3Upload (s3, bucketName, item, content, log) {
-  const key = bucketKey(item.cid)
-  const upload = new Upload({
-    client: s3,
-    params: {
-      Bucket: bucketName,
-      Key: key,
-      Body: Readable.from(content),
-      Metadata: { structure: 'Complete' }
-    }
-  })
-  await upload.done()
-  log(`${item.cid} successfully uploaded to ${bucketName}/${key}`)
 }
