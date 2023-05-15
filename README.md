@@ -8,6 +8,7 @@ Drop a `.env` file in the project root and populate:
 
 ```sh
 DATA_URL=<value> # URL to ndjson file of objects with a CID property for backing up
+VERIFIER_URL=<value> # URL to linkdex API
 S3_REGION=<value>
 S3_BUCKET_NAME=<value>
 S3_ACCESS_KEY_ID=<value> # optional
