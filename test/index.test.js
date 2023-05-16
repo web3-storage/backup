@@ -1,10 +1,21 @@
 import { GenericContainer, Wait, Network } from 'testcontainers'
 import { S3Client, CreateBucketCommand } from '@aws-sdk/client-s3'
+import http from 'http'
 import { fetchData } from '../index.js'
 import test from 'ava'
 
 test('backup a dag', async t => {
   t.timeout(60_000 * 5) // first run can take a while if you need to fetch the images. (takes ~14s after that)
+
+  const verifierSrv = await createMockVerifierServer()
+  // @ts-ignore
+  const verifierURL = `http://host.docker.internal:${verifierSrv.address().port}`
+  t.teardown(() => verifierSrv.close())
+
+  const dataSrv = await createMockDataServer()
+  // @ts-ignore
+  const dataURL = `http://host.docker.internal:${dataSrv.address().port}/nft-0.json`
+  t.teardown(() => dataSrv.close())
 
   const network = await new Network().start() // so backup can find minio
 
@@ -29,11 +40,13 @@ test('backup a dag', async t => {
   img.withName(`backup-${Date.now()}`)
   img.withWaitStrategy(Wait.forLogMessage(/configuring S3 client/))
   img.withNetwork(network)
+  img.withExtraHosts([{ host: 'host.docker.internal', ipAddress: 'host-gateway' }])
   img.withEnvironment({
-    BATCH_SIZE: 1,
-    CONCURRENCY: 1,
+    BATCH_SIZE: '1',
+    CONCURRENCY: '1',
     DEBUG: 'backup:*',
-    DATA_URL: 'https://bafybeiha7xoedojqjz6ghxdtbf7yx2eklwo7db36772u3odrjusqck3ljm.ipfs.w3s.link/nft-0.json',
+    DATA_URL: dataURL,
+    VERIFIER_URL: verifierURL,
     S3_ENDPOINT: s3Endpoint,
     S3_REGION: region,
     S3_BUCKET_NAME: bucketName,
@@ -66,6 +79,26 @@ async function createBucket (bucketName, minio, accessKeyId, secretAccessKey, re
     }
   })
   return s3.send(new CreateBucketCommand({ Bucket: bucketName }))
+}
+
+async function createMockVerifierServer () {
+  const server = http.createServer((req, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.write(JSON.stringify({ structure: 'Unknown' }))
+    res.end()
+  })
+  await new Promise(resolve => server.listen(resolve))
+  return server
+}
+
+async function createMockDataServer () {
+  const server = http.createServer((req, res) => {
+    res.setHeader('Content-Type', 'application/x-ndjson')
+    res.write(JSON.stringify({ cid: 'QmSUF1gaYbDNPQtBgaYwdmBn1dBH8CSQoi8uFPNsFm4S11' }))
+    res.end()
+  })
+  await new Promise(resolve => server.listen(resolve))
+  return server
 }
 
 test('fetchData', async t => {
