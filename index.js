@@ -118,7 +118,7 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
  * @param {string|URL} url
  * @returns {AsyncIterable<InputData>}
  */
-async function * fetchCID (url, log) {
+export async function * fetchCID (url, log) {
   const data = await fetchData(url, log)
   // @ts-ignore
   yield * parse(data)
@@ -181,7 +181,7 @@ function filterAlreadyStored (s3, bucket, log) {
 /**
  * @param {IpfsClient} ipfs
  */
-async function * exportCar (ipfs, item, log) {
+export async function * exportCar (ipfs, item, log) {
   let reportInterval
   try {
     let bytesReceived = 0
@@ -205,7 +205,7 @@ async function * exportCar (ipfs, item, log) {
  * @param {InputData} item
  * @param {AsyncIterable<Uint8Array>} content
  */
-async function s3Upload (s3, bucketName, item, content, log) {
+export async function s3Upload (s3, bucketName, item, content, log) {
   const key = bucketKey(item.cid)
   const upload = new Upload({
     client: s3,

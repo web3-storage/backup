@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import dotenv from 'dotenv'
-import { startBackup } from './index.js'
+import { startBackup } from './index2.js'
 
 dotenv.config()
 
@@ -14,7 +14,8 @@ try {
     s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
     s3Endpoint: process.env.S3_ENDPOINT,
     concurrency: process.env.CONCURRENCY ? parseInt(process.env.CONCURRENCY) : undefined,
-    healthcheckPort: process.env.HEALTHCHECK_PORT ? parseInt(process.env.HEALTHCHECK_PORT) : undefined
+    healthcheckPort: process.env.HEALTHCHECK_PORT ? parseInt(process.env.HEALTHCHECK_PORT) : undefined,
+    verifierURL: mustGetEnv('VERIFIER_URL')
   })
 } catch (err) {
   console.error('exiting! startBackup threw error', err)
