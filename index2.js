@@ -18,8 +18,8 @@ const CONCURRENCY = 5
 const BLOCK_TIMEOUT = 1000 * 30 // timeout if we don't receive a block after 30s
 const REPORT_INTERVAL = 1000 * 10 // log download progress every 10 seconds
 const VERIFIER_CONCURRENCY = 5
-/** Max DAG size to verify (we can only do around 17GiB in 15 minutes) */
-const VERIFIER_MAX_DAG_SIZE = 1024 * 1024 * 1024 * 17
+/** Max DAG size to verify (we can only do around 20GiB in 15 minutes) */
+const VERIFIER_MAX_DAG_SIZE = 1024 * 1024 * 1024 * 20
 /** Max time to verify a DAG (in ms) */
 const VERIFIER_TIMEOUT = 1000 * 60 * 15
 
