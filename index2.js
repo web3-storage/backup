@@ -17,6 +17,7 @@ const fmt = formatNumber()
 const CONCURRENCY = 5
 const BLOCK_TIMEOUT = 1000 * 30 // timeout if we don't receive a block after 30s
 const REPORT_INTERVAL = 1000 * 10 // log download progress every 10 seconds
+const VERIFY_CONCURRENCY = 5
 /** Max time to verify a DAG (in ms) */
 const VERIFIER_TIMEOUT = 1000 * 60 * 15
 
@@ -72,7 +73,7 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
   await pipe(
     fetchCID(dataURL, log),
     checkSize(ipfs, concurrency ?? CONCURRENCY, log),
-    filterVerifiedComplete(verifierURL, concurrency ?? CONCURRENCY, log),
+    filterVerifiedComplete(verifierURL, VERIFY_CONCURRENCY, log),
     transform(concurrency ?? CONCURRENCY, async (item) => {
       log(`processing ${item.cid}`)
       try {
