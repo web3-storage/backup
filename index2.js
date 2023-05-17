@@ -17,7 +17,9 @@ const fmt = formatNumber()
 const CONCURRENCY = 5
 const BLOCK_TIMEOUT = 1000 * 30 // timeout if we don't receive a block after 30s
 const REPORT_INTERVAL = 1000 * 10 // log download progress every 10 seconds
-const VERIFY_CONCURRENCY = 5
+const VERIFIER_CONCURRENCY = 5
+/** Max DAG size to verify (we can only do around 17GiB in 15 minutes) */
+const VERIFIER_MAX_DAG_SIZE = 1024 * 1024 * 1024 * 17
 /** Max time to verify a DAG (in ms) */
 const VERIFIER_TIMEOUT = 1000 * 60 * 15
 
@@ -73,7 +75,7 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
   await pipe(
     fetchCID(dataURL, log),
     checkSize(ipfs, concurrency ?? CONCURRENCY, log),
-    filterVerifiedComplete(verifierURL, VERIFY_CONCURRENCY, log),
+    filterVerifiedComplete(verifierURL, VERIFIER_CONCURRENCY, log),
     transform(concurrency ?? CONCURRENCY, async (item) => {
       log(`processing ${item.cid}`)
       try {
@@ -129,6 +131,11 @@ function filterVerifiedComplete (url, concurrency, log) {
     yield * pipe(
       source,
       transform(concurrency, async item => {
+        if (item.size && item.size > VERIFIER_MAX_DAG_SIZE) {
+          log(`skipping ${item.cid}: ${fmt(item.size)} bytes is too big!`)
+          return null
+        }
+
         log(`verifying ${item.cid}...`)
         const start = Date.now()
         while (true) {
