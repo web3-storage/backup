@@ -148,7 +148,7 @@ export async function fetchData (dataURL, log) {
 }
 
 /** @param {string} cid */
-const bucketKey = cid => `complete/${CID.parse(cid).toV1()}.car`
+export const bucketKey = cid => `complete/${CID.parse(cid).toV1()}.car`
 
 /**
  * @param {S3Client} s3

@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { S3Client } from '@aws-sdk/client-s3'
+import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3'
 import retry from 'p-retry'
 import { transform } from 'streaming-iterables'
 import { pipe } from 'it-pipe'
@@ -10,7 +10,7 @@ import * as raw from 'multiformats/codecs/raw'
 import * as dagPB from '@ipld/dag-pb'
 import { IpfsClient } from './ipfs-client.js'
 import { createHealthCheckServer } from './health.js'
-import { fetchCID, exportCar, s3Upload } from './index.js'
+import { fetchCID, exportCar, s3Upload, bucketKey } from './index.js'
 
 const fmt = formatNumber()
 
@@ -72,10 +72,16 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
   let totalProcessed = 0
   let totalSuccessful = 0
 
+  /** @param {string} cid */
+  const isExists = cid => {
+    log(`checking if ${cid} exists in S3...`)
+    return isAlreadyStored(s3, s3BucketName, cid)
+  }
+
   await pipe(
     fetchCID(dataURL, log),
     checkSize(ipfs, concurrency ?? CONCURRENCY, log),
-    filterVerifiedComplete(verifierURL, VERIFIER_CONCURRENCY, log),
+    filterVerifiedComplete(verifierURL, VERIFIER_CONCURRENCY, isExists, log),
     transform(concurrency ?? CONCURRENCY, async (item) => {
       log(`processing ${item.cid}`)
       try {
@@ -123,14 +129,21 @@ export async function startBackup ({ dataURL, s3Region, s3BucketName, s3AccessKe
 /**
  * @param {string|URL} url Verifier API URL
  * @param {number} concurrency
+ * @param {(cid: string) => Promise<boolean>} isExists
  * @param {(...args: any[]) => void} log
  */
-function filterVerifiedComplete (url, concurrency, log) {
+function filterVerifiedComplete (url, concurrency, isExists, log) {
   /** @param {import('it-pipe').Source<InputData & { size?: number | undefined }>} source */
   return async function * (source) {
     yield * pipe(
       source,
       transform(concurrency, async item => {
+        const exists = await isExists(item.cid)
+        if (!exists) {
+          log(`not verifying ${item.cid} - it not exist in bucket yet`)
+          return item
+        }
+
         if (item.size && item.size > VERIFIER_MAX_DAG_SIZE) {
           log(`skipping ${item.cid}: ${fmt(item.size)} bytes is too big!`)
           return null
@@ -174,6 +187,21 @@ function filterVerifiedComplete (url, concurrency, log) {
         }
       }
     )
+  }
+}
+
+/**
+ * @param {S3Client} s3
+ * @param {string} bucket
+ * @param {string} cid
+ */
+async function isAlreadyStored (s3, bucket, cid) {
+  const cmd = new HeadObjectCommand({ Bucket: bucket, Key: bucketKey(cid) })
+  try {
+    await s3.send(cmd)
+    return true
+  } catch {
+    return false
   }
 }
 
