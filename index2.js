@@ -207,7 +207,7 @@ function filterVerifiedComplete (concurrency, verifyDAG, isExists, log) {
               continue
             }
             log(`failed to verify ${item.cid}`, err)
-            return null // IDK - not really want to try transfer just incase it is complete and network failure
+            return item
           }
         }
       }),
